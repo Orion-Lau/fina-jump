@@ -9,12 +9,8 @@
 
 ## 角色素材
 
-遊戲會優先讀取單人立繪：
+遊戲使用單人立繪：
 
 `assets/fina-stand.png`
-
-如果沒有單人立繪，會讀取動作素材表：
-
-`assets/fina-spritesheet.png`
 
 首頁頭像和遊戲主角都會優先使用單人立繪。

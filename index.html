@@ -149,10 +149,7 @@
       height: 118px;
       border-radius: 50%;
       border: 4px solid #fff;
-      background:
-        url("assets/fina-stand.png") center 12% / 150% auto no-repeat,
-        url("assets/fina-spritesheet.png") 1.8% 14% / 365% auto no-repeat,
-        url("assets/fina-reference.jpg") center 20% / 230% auto no-repeat;
+      background: url("assets/fina-stand.png") center 12% / 150% auto no-repeat;
       box-shadow: 0 10px 26px rgba(240, 111, 159, 0.26);
       position: relative;
     }
@@ -166,14 +163,7 @@
     }
 
     .heroStamp::after {
-      content: "妃那";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 17px;
-      color: #fff;
-      font-weight: 900;
-      text-shadow: 0 2px 8px rgba(61, 40, 76, 0.36);
+      content: none;
     }
 
     button {
@@ -263,14 +253,6 @@
       finaStand.onload = () => {
         finaStandCanvas = makeLightBackgroundTransparent(finaStand);
       };
-      const finaSheet = new Image();
-      let finaSheetCanvas = null;
-      finaSheet.src = "assets/fina-spritesheet.png";
-      finaSheet.onload = () => {
-        finaSheetCanvas = makeBlackTransparent(finaSheet);
-      };
-      const finaImage = new Image();
-      finaImage.src = "assets/fina-reference.jpg";
 
       const state = {
         width: 0,
@@ -292,15 +274,6 @@
 
       const rand = (min, max) => Math.random() * (max - min) + min;
       const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-      const finaFrames = {
-        idle: { x: 465, y: 118, w: 165, h: 304, anchorY: 0.9 },
-        runA: { x: 648, y: 138, w: 178, h: 284, anchorY: 0.88 },
-        runB: { x: 844, y: 142, w: 184, h: 278, anchorY: 0.88 },
-        jump: { x: 1068, y: 92, w: 190, h: 300, anchorY: 0.9 },
-        fall: { x: 1288, y: 132, w: 186, h: 292, anchorY: 0.9 },
-        land: { x: 498, y: 528, w: 206, h: 250, anchorY: 0.86 }
-      };
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -592,16 +565,6 @@
           return;
         }
 
-        if (finaSheetCanvas) {
-          drawFinaSheetPlayer(x, y, p, s, squash);
-          return;
-        }
-
-        if (finaImage.complete && finaImage.naturalWidth) {
-          drawFinaPhotoPlayer(x, y, p.face, s, squash);
-          return;
-        }
-
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(p.face, 1);
@@ -788,76 +751,9 @@
         ctx.restore();
       }
 
-      function drawFinaPhotoPlayer(x, y, face, s, squash) {
-        const bob = Math.sin(performance.now() / 120) * 1.2 * s;
-        const w = 104 * s;
-        const h = 112 * s;
-        const sx = 190;
-        const sy = 0;
-        const sw = 760;
-        const sh = 650;
-
-        ctx.save();
-        ctx.translate(x, y + bob);
-        ctx.scale(face, 1);
-        ctx.scale(1 + squash * 0.55, 1 - squash * 0.45);
-
-        ctx.fillStyle = "rgba(65, 38, 83, 0.2)";
-        ctx.beginPath();
-        ctx.ellipse(0, 42 * s, 34 * s, 9 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(0, -90 * s);
-        ctx.bezierCurveTo(55 * s, -90 * s, 65 * s, -36 * s, 49 * s, 11 * s);
-        ctx.bezierCurveTo(40 * s, 38 * s, 19 * s, 50 * s, 0, 50 * s);
-        ctx.bezierCurveTo(-19 * s, 50 * s, -40 * s, 38 * s, -49 * s, 11 * s);
-        ctx.bezierCurveTo(-65 * s, -36 * s, -55 * s, -90 * s, 0, -90 * s);
-        ctx.closePath();
-        ctx.shadowColor = "rgba(68, 38, 95, 0.22)";
-        ctx.shadowBlur = 12 * s;
-        ctx.shadowOffsetY = 5 * s;
-        ctx.fillStyle = "#ffffff";
-        ctx.fill();
-        ctx.clip();
-        ctx.drawImage(finaImage, sx, sy, sw, sh, -w / 2, -88 * s, w, h);
-        ctx.restore();
-
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 5 * s;
-        ctx.beginPath();
-        ctx.moveTo(0, -90 * s);
-        ctx.bezierCurveTo(55 * s, -90 * s, 65 * s, -36 * s, 49 * s, 11 * s);
-        ctx.bezierCurveTo(40 * s, 38 * s, 19 * s, 50 * s, 0, 50 * s);
-        ctx.bezierCurveTo(-19 * s, 50 * s, -40 * s, 38 * s, -49 * s, 11 * s);
-        ctx.bezierCurveTo(-65 * s, -36 * s, -55 * s, -90 * s, 0, -90 * s);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.strokeStyle = "rgba(103, 70, 183, 0.36)";
-        ctx.lineWidth = 1.4 * s;
-        ctx.stroke();
-
-        ctx.fillStyle = "#5f3f86";
-        roundRect(-15 * s, 38 * s, 11 * s, 8 * s, 3 * s);
-        roundRect(4 * s, 38 * s, 11 * s, 8 * s, 3 * s);
-        ctx.fill();
-
-        ctx.fillStyle = "#ffe36f";
-        ctx.beginPath();
-        ctx.moveTo(-9 * s, 45 * s);
-        ctx.lineTo(0, 55 * s);
-        ctx.lineTo(9 * s, 45 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-      }
-
       function drawFinaStandPlayer(x, y, player, s, squash) {
         const bob = Math.sin(performance.now() / 130) * 0.8 * s;
-        const drawH = 118 * s;
+        const drawH = 168 * s;
         const ratio = finaStandCanvas.width / finaStandCanvas.height;
         const drawW = drawH * ratio;
 
@@ -868,7 +764,7 @@
 
         ctx.fillStyle = "rgba(65, 38, 83, 0.22)";
         ctx.beginPath();
-        ctx.ellipse(0, 41 * s, 27 * s, 7 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 43 * s, 34 * s, 8 * s, 0, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.shadowColor = "rgba(68, 38, 95, 0.22)";
@@ -884,76 +780,6 @@
         }
 
         ctx.restore();
-      }
-
-      function drawFinaSheetPlayer(x, y, player, s, squash) {
-        const speed = Math.abs(player.vx);
-        let frameName = "idle";
-        if (player.vy < -3.2 * s) frameName = "jump";
-        else if (player.vy > 4.2 * s) frameName = "fall";
-        else if (speed > 1.2 * s) frameName = Math.floor(performance.now() / 140) % 2 ? "runA" : "runB";
-        if (squash > 0.05 && player.vy < 1.5 * s) frameName = "land";
-
-        const frame = finaFrames[frameName];
-        const source = scaleFrameToSheet(frame);
-        const bob = Math.sin(performance.now() / 130) * 0.8 * s;
-        const drawH = (frameName === "land" ? 86 : 106) * s;
-        const drawW = drawH * (frame.w / frame.h);
-
-        ctx.save();
-        ctx.translate(x, y + bob);
-        ctx.scale(player.face || 1, 1);
-        ctx.scale(1 + squash * 0.42, 1 - squash * 0.34);
-
-        ctx.fillStyle = "rgba(65, 38, 83, 0.22)";
-        ctx.beginPath();
-        ctx.ellipse(0, 39 * s, 30 * s, 8 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.shadowColor = "rgba(68, 38, 95, 0.2)";
-        ctx.shadowBlur = 8 * s;
-        ctx.shadowOffsetY = 4 * s;
-        ctx.drawImage(
-          finaSheetCanvas,
-          source.x,
-          source.y,
-          source.w,
-          source.h,
-          -drawW / 2,
-          -drawH * frame.anchorY,
-          drawW,
-          drawH
-        );
-        ctx.shadowColor = "transparent";
-        ctx.restore();
-      }
-
-      function scaleFrameToSheet(frame) {
-        const sx = finaSheetCanvas.width / 1536;
-        const sy = finaSheetCanvas.height / 1024;
-        return {
-          x: Math.round(frame.x * sx),
-          y: Math.round(frame.y * sy),
-          w: Math.round(frame.w * sx),
-          h: Math.round(frame.h * sy)
-        };
-      }
-
-      function makeBlackTransparent(image) {
-        const buffer = document.createElement("canvas");
-        buffer.width = image.naturalWidth;
-        buffer.height = image.naturalHeight;
-        const bctx = buffer.getContext("2d");
-        bctx.drawImage(image, 0, 0);
-        const data = bctx.getImageData(0, 0, buffer.width, buffer.height);
-        for (let i = 0; i < data.data.length; i += 4) {
-          const r = data.data[i];
-          const g = data.data[i + 1];
-          const b = data.data[i + 2];
-          if (r < 16 && g < 16 && b < 16) data.data[i + 3] = 0;
-        }
-        bctx.putImageData(data, 0, 0);
-        return buffer;
       }
 
       function makeLightBackgroundTransparent(image) {
