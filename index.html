@@ -315,7 +315,7 @@
         state.bestY = baseY - 60;
         state.startY = baseY - 60;
         state.platforms.push({ x: state.width / 2 - 76, y: baseY, w: 152, h: 18, type: "start", drift: 0, phase: 0, star: false, used: false });
-        for (let y = baseY - 62; y > -state.height * 1.9; y -= rand(46, 64)) {
+        for (let y = baseY - 68; y > -state.height * 1.9; y -= rand(54, 72)) {
           state.platforms.push(makePlatform(y, Math.random() < 0.18 ? "cloud" : "normal"));
         }
         for (let i = 0; i < 46; i += 1) {
@@ -358,8 +358,8 @@
       function applyDirectedJump(p, direction) {
         p.canJump = false;
         p.queuedDirection = 0;
-        p.vx = direction * 5.45 * state.scale;
-        p.vy = -8.6 * state.scale;
+        p.vx = direction * 4.55 * state.scale;
+        p.vy = -9.45 * state.scale;
         p.face = direction;
         p.squash = 1;
         burst(p.x, p.y + p.h * 0.48, "#fff4b8", 8);
@@ -382,7 +382,7 @@
       function ensurePlatforms() {
         let top = Math.min(...state.platforms.map((p) => p.y));
         while (top > state.cameraY - state.height * 1.7) {
-          top -= rand(46, 64);
+          top -= rand(54, 72);
           const chance = Math.random();
           state.platforms.push(makePlatform(top, chance < 0.14 ? "spring" : chance < 0.3 ? "cloud" : "normal"));
         }
@@ -391,7 +391,7 @@
 
       function update(dt) {
         const p = state.player;
-        const gravity = 0.46 * state.scale;
+        const gravity = 0.38 * state.scale;
         p.vy += gravity * dt;
         p.x += p.vx * dt;
         p.y += p.vy * dt;
@@ -414,7 +414,7 @@
           const horizontal = p.x + p.w * 0.32 > platform.x && p.x - p.w * 0.32 < platform.x + platform.w;
           if (p.vy > 0 && wasAbove && nowCrossing && horizontal) {
             p.y = platform.y - p.h * 0.48;
-            p.vy = platform.type === "spring" ? -10.8 * state.scale : -8.4 * state.scale;
+            p.vy = platform.type === "spring" ? -11.6 * state.scale : -9.2 * state.scale;
             p.canJump = true;
             p.squash = 1;
             burst(p.x, platform.y, platform.type === "spring" ? "#ffe46f" : "#fff6ff", platform.type === "spring" ? 14 : 7);
