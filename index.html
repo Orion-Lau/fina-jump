@@ -143,6 +143,19 @@
       line-height: 1.55;
     }
 
+    .fanNote {
+      display: inline-block;
+      margin: 0 0 12px;
+      border: 1px solid rgba(103, 70, 183, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 247, 252, 0.78);
+      color: #6f4c9e;
+      padding: 5px 9px;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
     .heroStamp {
       margin: 0 auto 14px;
       width: 118px;
@@ -233,6 +246,7 @@
     <div class="card">
       <div class="heroStamp" aria-hidden="true"></div>
       <h1>妃那的櫻花跳躍</h1>
+      <div class="fanNote">符文工廠：龍之天地 同人小游戲</div>
       <p class="subtitle">點左邊向左跳，點右邊向右跳。踩上櫻花台階，收集金色星星，越跳越高。</p>
       <button id="startButton">開始冒險</button>
       <p class="small">電腦也能玩：按 A / ← 跳左，D / → 跳右。</p>
@@ -358,7 +372,7 @@
       function applyDirectedJump(p, direction) {
         p.canJump = false;
         p.queuedDirection = 0;
-        p.vx = direction * 4.55 * state.scale;
+        p.vx = direction * 3.75 * state.scale;
         p.vy = -9.45 * state.scale;
         p.face = direction;
         p.squash = 1;
@@ -399,8 +413,18 @@
         p.squash = Math.max(0, p.squash - 0.06 * dt);
         p.invuln = Math.max(0, p.invuln - dt);
 
-        if (p.x < -p.w * 0.45) p.x = state.width + p.w * 0.35;
-        if (p.x > state.width + p.w * 0.45) p.x = -p.w * 0.35;
+        const leftWall = p.w * 0.38;
+        const rightWall = state.width - p.w * 0.38;
+        if (p.x < leftWall) {
+          p.x = leftWall;
+          p.vx = Math.abs(p.vx) * 0.42;
+          p.face = 1;
+        }
+        if (p.x > rightWall) {
+          p.x = rightWall;
+          p.vx = -Math.abs(p.vx) * 0.42;
+          p.face = -1;
+        }
 
         for (const platform of state.platforms) {
           platform.phase += 0.02 * dt;
@@ -411,8 +435,13 @@
 
           const wasAbove = p.y + p.h * 0.48 - p.vy * dt <= platform.y;
           const nowCrossing = p.y + p.h * 0.48 >= platform.y && p.y + p.h * 0.38 <= platform.y + platform.h;
-          const horizontal = p.x + p.w * 0.32 > platform.x && p.x - p.w * 0.32 < platform.x + platform.w;
+          const magnet = 18 * state.scale;
+          const playerLeft = p.x - p.w * 0.32;
+          const playerRight = p.x + p.w * 0.32;
+          const horizontal = playerRight > platform.x - magnet && playerLeft < platform.x + platform.w + magnet;
           if (p.vy > 0 && wasAbove && nowCrossing && horizontal) {
+            if (p.x < platform.x) p.x += (platform.x - p.x) * 0.45;
+            if (p.x > platform.x + platform.w) p.x -= (p.x - (platform.x + platform.w)) * 0.45;
             p.y = platform.y - p.h * 0.48;
             p.vy = platform.type === "spring" ? -11.6 * state.scale : -9.2 * state.scale;
             p.canJump = true;
