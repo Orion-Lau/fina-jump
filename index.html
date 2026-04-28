@@ -300,10 +300,11 @@
         state.scale = clamp(rect.width / 390, 0.82, 1.18);
       }
 
-      function makePlatform(y, type = "normal") {
-        const w = rand(98, 136) * state.scale;
+      function makePlatform(y, type = "normal", x = null) {
+        const w = rand(69, 95) * state.scale;
+        const px = x === null ? rand(18, Math.max(22, state.width - w - 18)) : clamp(x, 18, state.width - w - 18);
         return {
-          x: rand(18, Math.max(22, state.width - w - 18)),
+          x: px,
           y,
           w,
           h: 16 * state.scale,
@@ -314,6 +315,38 @@
           used: false,
           breakTimer: 0
         };
+      }
+
+      function choosePlatformType(isPair) {
+        const chance = Math.random();
+        if (isPair) {
+          if (chance < 0.16) return "break";
+          if (chance < 0.28) return "spring";
+          if (chance < 0.42) return "cloud";
+          return "normal";
+        }
+        if (chance < 0.07) return "break";
+        if (chance < 0.18) return "spring";
+        if (chance < 0.32) return "cloud";
+        return "normal";
+      }
+
+      function addPlatformRow(y, allowPair = true) {
+        const isPair = allowPair && Math.random() < 0.2;
+        if (!isPair) {
+          const centerBias = Math.random() < 0.55;
+          const w = rand(69, 95) * state.scale;
+          const x = centerBias
+            ? rand(state.width * 0.22, state.width * 0.78 - w)
+            : rand(18, Math.max(22, state.width - w - 18));
+          state.platforms.push(makePlatform(y, choosePlatformType(false), x));
+          return;
+        }
+
+        const leftX = rand(18, state.width * 0.38);
+        const rightX = rand(state.width * 0.58, state.width - 100 * state.scale);
+        state.platforms.push(makePlatform(y, choosePlatformType(true), leftX));
+        state.platforms.push(makePlatform(y + rand(-5, 5) * state.scale, choosePlatformType(true), rightX));
       }
 
       function resetGame() {
@@ -331,8 +364,7 @@
         state.startY = baseY - 60;
         state.platforms.push({ x: state.width / 2 - 66, y: baseY, w: 132, h: 18, type: "start", drift: 0, phase: 0, star: false, used: false, breakTimer: 0 });
         for (let y = baseY - 68; y > -state.height * 1.9; y -= rand(54, 72)) {
-          const chance = Math.random();
-          state.platforms.push(makePlatform(y, chance < 0.12 ? "break" : chance < 0.3 ? "cloud" : "normal"));
+          addPlatformRow(y, true);
         }
         for (let i = 0; i < 46; i += 1) {
           state.petals.push({ x: rand(0, state.width), y: rand(-state.height, state.height), r: rand(4, 9), s: rand(18, 52), a: rand(0, Math.PI * 2) });
@@ -399,8 +431,7 @@
         let top = Math.min(...state.platforms.map((p) => p.y));
         while (top > state.cameraY - state.height * 1.7) {
           top -= rand(54, 72);
-          const chance = Math.random();
-          state.platforms.push(makePlatform(top, chance < 0.12 ? "break" : chance < 0.24 ? "spring" : chance < 0.4 ? "cloud" : "normal"));
+          addPlatformRow(top, true);
         }
         state.platforms = state.platforms.filter((p) => p.y < state.cameraY + state.height + 90 && p.breakTimer < 28);
       }
