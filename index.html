@@ -301,7 +301,7 @@
       }
 
       function makePlatform(y, type = "normal") {
-        const w = rand(112, 154) * state.scale;
+        const w = rand(98, 136) * state.scale;
         return {
           x: rand(18, Math.max(22, state.width - w - 18)),
           y,
@@ -311,7 +311,8 @@
           drift: type === "cloud" ? rand(0.7, 1.25) * (Math.random() < 0.5 ? -1 : 1) : 0,
           phase: rand(0, Math.PI * 2),
           star: Math.random() < 0.34,
-          used: false
+          used: false,
+          breakTimer: 0
         };
       }
 
@@ -328,9 +329,10 @@
         const baseY = state.height - 78;
         state.bestY = baseY - 60;
         state.startY = baseY - 60;
-        state.platforms.push({ x: state.width / 2 - 76, y: baseY, w: 152, h: 18, type: "start", drift: 0, phase: 0, star: false, used: false });
+        state.platforms.push({ x: state.width / 2 - 66, y: baseY, w: 132, h: 18, type: "start", drift: 0, phase: 0, star: false, used: false, breakTimer: 0 });
         for (let y = baseY - 68; y > -state.height * 1.9; y -= rand(54, 72)) {
-          state.platforms.push(makePlatform(y, Math.random() < 0.18 ? "cloud" : "normal"));
+          const chance = Math.random();
+          state.platforms.push(makePlatform(y, chance < 0.12 ? "break" : chance < 0.3 ? "cloud" : "normal"));
         }
         for (let i = 0; i < 46; i += 1) {
           state.petals.push({ x: rand(0, state.width), y: rand(-state.height, state.height), r: rand(4, 9), s: rand(18, 52), a: rand(0, Math.PI * 2) });
@@ -398,9 +400,9 @@
         while (top > state.cameraY - state.height * 1.7) {
           top -= rand(54, 72);
           const chance = Math.random();
-          state.platforms.push(makePlatform(top, chance < 0.14 ? "spring" : chance < 0.3 ? "cloud" : "normal"));
+          state.platforms.push(makePlatform(top, chance < 0.12 ? "break" : chance < 0.24 ? "spring" : chance < 0.4 ? "cloud" : "normal"));
         }
-        state.platforms = state.platforms.filter((p) => p.y < state.cameraY + state.height + 90);
+        state.platforms = state.platforms.filter((p) => p.y < state.cameraY + state.height + 90 && p.breakTimer < 28);
       }
 
       function update(dt) {
@@ -432,6 +434,7 @@
             platform.x += platform.drift * dt;
             if (platform.x < 12 || platform.x + platform.w > state.width - 12) platform.drift *= -1;
           }
+          if (platform.breakTimer > 0) platform.breakTimer += dt;
 
           const wasAbove = p.y + p.h * 0.48 - p.vy * dt <= platform.y;
           const nowCrossing = p.y + p.h * 0.48 >= platform.y && p.y + p.h * 0.38 <= platform.y + platform.h;
@@ -447,6 +450,11 @@
             p.canJump = true;
             p.squash = 1;
             burst(p.x, platform.y, platform.type === "spring" ? "#ffe46f" : "#fff6ff", platform.type === "spring" ? 14 : 7);
+            if (platform.type === "break" && platform.breakTimer === 0) {
+              platform.breakTimer = 1;
+              platform.star = false;
+              burst(platform.x + platform.w / 2, platform.y, "#f0b6ca", 12);
+            }
             if (p.queuedDirection) applyDirectedJump(p, p.queuedDirection);
           }
 
@@ -548,19 +556,36 @@
       }
 
       function drawPlatform(platform) {
-        const y = screenY(platform.y);
+        const breakProgress = platform.breakTimer ? clamp(platform.breakTimer / 28, 0, 1) : 0;
+        const shake = platform.breakTimer ? Math.sin(platform.breakTimer * 2.4) * 2 * state.scale : 0;
+        const y = screenY(platform.y) + breakProgress * 18 * state.scale;
         if (y < -60 || y > state.height + 40) return;
         ctx.save();
+        ctx.globalAlpha = 1 - breakProgress * 0.86;
+        ctx.translate(shake, 0);
         const r = 9 * state.scale;
-        ctx.fillStyle = platform.type === "spring" ? "#ffe36f" : platform.type === "cloud" ? "#fff7fb" : "#f8a8c2";
-        ctx.strokeStyle = platform.type === "spring" ? "#c99129" : "#ffffff";
+        ctx.fillStyle = platform.type === "spring" ? "#ffe36f" : platform.type === "cloud" ? "#fff7fb" : platform.type === "break" ? "#e7bdd7" : "#f8a8c2";
+        ctx.strokeStyle = platform.type === "spring" ? "#c99129" : platform.type === "break" ? "#ffffff" : "#ffffff";
         ctx.lineWidth = 3;
         roundRect(platform.x, y, platform.w, platform.h, r);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = platform.type === "spring" ? "rgba(103,70,183,0.22)" : "rgba(255,255,255,0.45)";
+        ctx.fillStyle = platform.type === "spring" ? "rgba(103,70,183,0.22)" : platform.type === "break" ? "rgba(128,83,147,0.18)" : "rgba(255,255,255,0.45)";
         roundRect(platform.x + 9, y + 3, platform.w - 18, 4, 2);
         ctx.fill();
+
+        if (platform.type === "break") {
+          ctx.strokeStyle = "rgba(115, 69, 132, 0.45)";
+          ctx.lineWidth = 1.7 * state.scale;
+          ctx.beginPath();
+          ctx.moveTo(platform.x + platform.w * 0.36, y + 3 * state.scale);
+          ctx.lineTo(platform.x + platform.w * 0.46, y + platform.h * 0.46);
+          ctx.lineTo(platform.x + platform.w * 0.41, y + platform.h - 3 * state.scale);
+          ctx.moveTo(platform.x + platform.w * 0.58, y + 3 * state.scale);
+          ctx.lineTo(platform.x + platform.w * 0.53, y + platform.h * 0.58);
+          ctx.lineTo(platform.x + platform.w * 0.68, y + platform.h - 2 * state.scale);
+          ctx.stroke();
+        }
 
         if (platform.type === "spring") {
           ctx.strokeStyle = "#7e58d6";
